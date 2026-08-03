@@ -21,29 +21,6 @@ irm https://raw.githubusercontent.com/shopload/rms-claude/main/scripts/install.p
 
 インストール先を変えたい場合は `RMS_CLI_INSTALL_DIR` 環境変数で指定する。
 
-### gh release download（手動）
-
-```bash
-# macOS / Linux（自動判定）
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-gh release download --repo shopload/rms-claude \
-  --pattern "rms-cli_${OS}_${ARCH}" --dir /tmp
-chmod +x "/tmp/rms-cli_${OS}_${ARCH}"
-sudo mv "/tmp/rms-cli_${OS}_${ARCH}" /usr/local/bin/rms-cli
-rms-cli --version
-```
-
-```powershell
-# Windows（自動判定）
-$arch = if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "arm64" } else { "amd64" }
-gh release download --repo shopload/rms-claude `
-  --pattern "rms-cli_windows_$arch.exe" --dir $env:TEMP
-Move-Item "$env:TEMP\rms-cli_windows_$arch.exe" rms-cli.exe
-```
-
-特定バージョンを指定する場合は `--tag v0.2.0` を追加する。
-
 ## Claude Code エージェント・スキルのインストール
 
 ### エージェント（`.claude/agents/`）
@@ -96,5 +73,3 @@ rms-cli item upsert my-item-code --genre-id 100000 --dry-run
 # 5. 破壊的操作は --yes が必須
 rms-cli item delete my-manage-number --yes
 ```
-
-詳細は [AGENTS.md](https://github.com/shopload/rms-cli/blob/main/AGENTS.md) を参照。
