@@ -1,11 +1,8 @@
 #!/usr/bin/env sh
 # Installs the latest rms-cli release for macOS or Linux.
 #
-# Requires: gh (GitHub CLI) — https://cli.github.com
-# The gh CLI handles authentication for private repositories automatically.
-#
 # Usage:
-#   sh scripts/install.sh
+#   curl -fsSL https://raw.githubusercontent.com/shopload/rms-claude/main/scripts/install.sh | sh
 #
 # Env vars (optional):
 #   RMS_CLI_INSTALL_DIR  where to install (default: /usr/local/bin, falling
@@ -15,12 +12,6 @@
 set -eu
 
 repo="shopload/rms-claude"
-
-if ! command -v gh >/dev/null 2>&1; then
-  echo "error: gh (GitHub CLI) is required but not found." >&2
-  echo "Install it from https://cli.github.com and run \`gh auth login\` first." >&2
-  exit 1
-fi
 
 os="$(uname -s)"
 case "$os" in
@@ -44,36 +35,37 @@ esac
 
 asset="rms-cli_${os}_${arch}"
 
+# Resolve download URL
+if [ -n "${RMS_CLI_VERSION:-}" ]; then
+  base_url="https://github.com/${repo}/releases/download/${RMS_CLI_VERSION}"
+else
+  base_url="https://github.com/${repo}/releases/latest/download"
+fi
+
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
-version_flag=""
-if [ -n "${RMS_CLI_VERSION:-}" ]; then
-  version_flag="--tag ${RMS_CLI_VERSION}"
+echo "Downloading ${asset}..."
+if ! curl -fsSL "${base_url}/${asset}" -o "${tmp_dir}/rms-cli"; then
+  echo "error: failed to download ${base_url}/${asset}" >&2
+  exit 1
 fi
 
-echo "Downloading ${asset}..."
-# shellcheck disable=SC2086
-gh release download ${version_flag} \
-  --repo "$repo" \
-  --pattern "$asset" \
-  --dir "$tmp_dir"
-
-chmod +x "${tmp_dir}/${asset}"
+chmod +x "${tmp_dir}/rms-cli"
 
 install_dir="${RMS_CLI_INSTALL_DIR:-/usr/local/bin}"
 if [ ! -d "$install_dir" ] || [ ! -w "$install_dir" ]; then
   if [ -z "${RMS_CLI_INSTALL_DIR:-}" ] && command -v sudo >/dev/null 2>&1 && [ -d "$install_dir" ]; then
     echo "Installing to ${install_dir} requires administrator privileges."
-    sudo mv "${tmp_dir}/${asset}" "${install_dir}/rms-cli"
+    sudo mv "${tmp_dir}/rms-cli" "${install_dir}/rms-cli"
     sudo chmod +x "${install_dir}/rms-cli"
   else
     install_dir="${HOME}/.local/bin"
     mkdir -p "$install_dir"
-    mv "${tmp_dir}/${asset}" "${install_dir}/rms-cli"
+    mv "${tmp_dir}/rms-cli" "${install_dir}/rms-cli"
   fi
 else
-  mv "${tmp_dir}/${asset}" "${install_dir}/rms-cli"
+  mv "${tmp_dir}/rms-cli" "${install_dir}/rms-cli"
 fi
 
 echo ""
