@@ -74,7 +74,7 @@ rms-cli skills install
 
 ```bash
 mkdir -p .claude/agents
-base="https://raw.githubusercontent.com/shopload/rms-claude/main/.claude/agents"
+base="https://raw.githubusercontent.com/shopload/rms-claude/main/agents"
 curl -fsSL "$base/rms-inquiry-responder.md" -o .claude/agents/rms-inquiry-responder.md
 curl -fsSL "$base/rms-coupon-issuer.md"     -o .claude/agents/rms-coupon-issuer.md
 curl -fsSL "$base/rms-defect-report.md"     -o .claude/agents/rms-defect-report.md
