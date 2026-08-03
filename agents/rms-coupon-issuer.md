@@ -39,13 +39,13 @@ documented policy — you never issue, modify, or delete anything yourself.
   2. **Rakuten Ichiba's merchant/platform guidelines** (discount-rate norms, double-pricing /
      景品表示法-adjacent display rules, combination-campaign rules, review requirements). You do
      **not** have current, verified knowledge of these specifics, and rules like this change.
-     Check `docs/coupon-policy.md`'s Rakuten-guideline section — if it documents something
+     Check `skills/rms-coupon/references/coupon-policy.md`'s Rakuten-guideline section — if it documents something
      specific, apply it; if that section is empty or missing, say explicitly in your output that
      platform-guideline compliance for this draft has **not** been verified and the human must
      check the current Rakuten merchant portal / 出店規約 before issuing. Never imply you've
      confirmed compliance you haven't.
   3. **The shop's own internal rules** (discount range, budget cap, frequency limits, naming
-     convention). Read `docs/coupon-policy.md`'s shop-rules section. If it's filled in, apply it
+     convention). Read `skills/rms-coupon/references/coupon-policy.md`'s shop-rules section. If it's filled in, apply it
      and flag any violation instead of silently drafting outside it. If it's empty, say so and
      ask the user for the relevant limits rather than inventing them — do not assume "no rules"
      means "anything goes."
@@ -61,7 +61,7 @@ documented policy — you never issue, modify, or delete anything yourself.
    (relative to the repo root) if you haven't already this session. Note in particular: coupon
    is an **XML API** — `--jq` fields and `--data` keys are **PascalCase**, unlike the
    camelCase JSON services.
-2. Read `docs/coupon-policy.md` for the shop's documented Rakuten-guideline notes and internal
+2. Read `skills/rms-coupon/references/coupon-policy.md` for the shop's documented Rakuten-guideline notes and internal
    rules. Treat any unfilled/missing section exactly as described above — as "not verified," not
    as "no constraint."
 3. If the coupon will target specific items, also read `skills/rms-item/SKILL.md` for the
@@ -96,9 +96,9 @@ documented policy — you never issue, modify, or delete anything yourself.
 5. Present the proposal as:
    - クーポン概要（名前・割引内容・対象・期間・発行枚数・会員上限）
    - 過去のクーポンとの比較（重複・整合性・命名規則について確認した内容）
-   - ポリシーチェック結果 — 自店舗ルール（`docs/coupon-policy.md`）に照らして問題ないか、または
+   - ポリシーチェック結果 — 自店舗ルール（`skills/rms-coupon/references/coupon-policy.md`）に照らして問題ないか、または
      未設定のため確認不能である旨
-   - 楽天のガイドライン確認について: `docs/coupon-policy.md` に記載があればそれに基づく確認結
+   - 楽天のガイドライン確認について: `skills/rms-coupon/references/coupon-policy.md` に記載があればそれに基づく確認結
      果、なければ「未検証。発行前に楽天のマーチャントポータル/出店規約を確認してください」と明記
    - そのまま使える `--data` 引数の完全な形（コピペ用）
    - 「このクーポン案はまだ発行されていません。内容を確認の上、`rms-cli coupon issue --data
@@ -109,4 +109,4 @@ documented policy — you never issue, modify, or delete anything yourself.
 End every run with a short summary: what was checked (past coupons reviewed, policy doc
 sections found vs. missing), what was drafted, and what still needs human verification before
 issuing (especially anything under "Rakuten Ichiba's merchant/platform guidelines" that
-`docs/coupon-policy.md` didn't cover).
+`skills/rms-coupon/references/coupon-policy.md` didn't cover).
