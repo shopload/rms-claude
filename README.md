@@ -1,6 +1,5 @@
 # rms-claude
 
-[shopload/rms-cli](https://github.com/shopload/rms-cli) の公開配布リポジトリ。
 楽天RMS WEB SERVICE を Claude Code から操作するための **CLIバイナリ・エージェント・スキル** を配布する。
 
 ## インストール（rms-cli バイナリ）
