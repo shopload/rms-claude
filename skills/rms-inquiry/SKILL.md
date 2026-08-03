@@ -74,45 +74,53 @@ rms-cli inquiry get-counts \
 
 ```bash
 # 問い合わせ番号を positional 引数で渡す（--data ではない）
-rms-cli inquiry get-inquiry "356763-20260705-49336778t"
+rms-cli inquiry get-inquiry "XXXXXX-YYYYMMDD-XXXXXXXXx"
 
 # レスポンスは .result 内にラップされている
-rms-cli inquiry get-inquiry "356763-20260705-49336778t" \
+rms-cli inquiry get-inquiry "XXXXXX-YYYYMMDD-XXXXXXXXx" \
   --jq '{no: .result.inquiryNumber, user: .result.userName, msg: .result.message, replies: (.result.replies | length)}'
 ```
 
 ## 返信作成
 
-`shopId` は **認証情報（serviceSecret の `{shopId}-{serviceCode}` 形式）から自動注入** される。明示的に指定したい場合は `--shop-id` または `--data` に含める。
+`shopId` は認証情報の serviceSecret から **自動注入** される。以下の2形式に対応:
+- `{shopId}-{serviceCode}` 例: `123456-1`
+- `SP{shopId}_{serviceCode}` 例: `SP123456_xxxxxxxxxxxxxxxxx`
+
+自動注入できない場合のみ `--shop-id <id>` または `--data` の `shopId` フィールドで明示指定する。
+
+> **注意**: `--shop-id` フラグは `create-reply` 専用。`complete-inquiries` / `incomplete-inquiries` / `mark-inquiries-read` には `--shop-id` フラグは存在しない（不要）。
 
 ```bash
 # ドライランで確認（shopId が自動注入されていることを --dry-run で確認できる）
 rms-cli inquiry create-reply --dry-run --data '{
-  "inquiryNumber": "356763-20260705-49336778t",
+  "inquiryNumber": "XXXXXX-YYYYMMDD-XXXXXXXXx",
   "message": "ご連絡ありがとうございます。..."
 }'
 
 # 実行
 rms-cli inquiry create-reply --data '{
-  "inquiryNumber": "356763-20260705-49336778t",
+  "inquiryNumber": "XXXXXX-YYYYMMDD-XXXXXXXXx",
   "message": "ご連絡ありがとうございます。..."
 }'
 ```
 
 ## 完了・未完了マーク
 
+> `--shop-id` は不要。`--data` の JSON のみ渡す。
+
 ```bash
 # 完了にする
-rms-cli inquiry complete-inquiries --data '{"inquiryNumbers":["356763-20260705-49336778t"]}'
+rms-cli inquiry complete-inquiries --data '{"inquiryNumbers":["XXXXXX-YYYYMMDD-XXXXXXXXx"]}'
 
 # 未完了に戻す
-rms-cli inquiry incomplete-inquiries --data '{"inquiryNumbers":["356763-20260705-49336778t"]}'
+rms-cli inquiry incomplete-inquiries --data '{"inquiryNumbers":["XXXXXX-YYYYMMDD-XXXXXXXXx"]}'
 ```
 
 ## 既読マーク
 
 ```bash
-rms-cli inquiry mark-inquiries-read --data '{"inquiryNumbers":["356763-20260705-49336778t"]}'
+rms-cli inquiry mark-inquiries-read --data '{"inquiryNumbers":["XXXXXX-YYYYMMDD-XXXXXXXXx"]}'
 ```
 
 ## よくある操作パターン
@@ -130,8 +138,8 @@ rms-cli inquiry get-inquiries \
 ### 問い合わせに返信して完了にする
 
 ```bash
-# 1. 内容確認
-rms-cli inquiry get-inquiry --data '{"inquiryNumber":"XXX-XXXXXXXX-XXXXXXXXt"}'
+# 1. 内容確認（inquiryNumber は positional 引数で渡す）
+rms-cli inquiry get-inquiry "XXX-XXXXXXXX-XXXXXXXXt"
 
 # 2. 返信（ドライランで確認：shopId が自動注入されていることを確認）
 rms-cli inquiry create-reply --dry-run --data '{"inquiryNumber":"XXX-XXXXXXXX-XXXXXXXXt","message":"ご連絡ありがとうございます。..."}'
@@ -149,7 +157,7 @@ rms-cli inquiry complete-inquiries --data '{"inquiryNumbers":["XXX-XXXXXXXX-XXXX
 
 ```bash
 # 添付ファイルの有無を確認（get-inquiry レスポンスから）
-rms-cli inquiry get-inquiry "356763-20260705-49336778t" \
+rms-cli inquiry get-inquiry "XXXXXX-YYYYMMDD-XXXXXXXXx" \
   --jq '.result.attachments'
 
 # get-inquiries の各メッセージにも attachments がある（スレッド内各返信含む）
@@ -161,9 +169,9 @@ rms-cli inquiry get-inquiries --from-date ... --to-date ... \
 
 ```bash
 # 1. get-inquiry で path と label を確認
-ATTACH_PATH=$(rms-cli inquiry get-inquiry "356763-20260705-49336778t" \
+ATTACH_PATH=$(rms-cli inquiry get-inquiry "XXXXXX-YYYYMMDD-XXXXXXXXx" \
   --jq '.result.attachments[0].path' | tr -d '"')
-ATTACH_LABEL=$(rms-cli inquiry get-inquiry "356763-20260705-49336778t" \
+ATTACH_LABEL=$(rms-cli inquiry get-inquiry "XXXXXX-YYYYMMDD-XXXXXXXXx" \
   --jq '.result.attachments[0].label' | tr -d '"')
 
 # 2. ダウンロードして保存（base64 デコード）
