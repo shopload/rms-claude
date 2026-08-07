@@ -40,6 +40,7 @@ metadata:
 | レスポンスの混在ケーシング | `get-order` のリスト型は **PascalCase**（`OrderModelList`/`PackageModelList`/`ItemModelList`/`SkuModelList`）、スカラーは camelCase（`orderNumber`/`totalPrice`）。`orderModelList` は null になる |
 | 在庫取得 | `inventory bulk-get` は `manageNumber` **と** `variantId` の両方が必須。片方だけだと 400 |
 | レート制限 | `item search` を商品ごとにループすると **429** になる。件数だけ要るときは `--hits 1` で `numFound` を読む |
+| 0件時のレスポンス | `search-order` が0件のとき **`PaginationResponseModel` は `{}`、`orderNumberList` は存在しない**。素の `.PaginationResponseModel.totalRecordsAmount` は `null` を返し「0件」と「エラー」が区別できなくなる。必ず `// 0` / `// []` で null 安全に書く |
 | coupon のケーシング | coupon は XML API のため入出力とも **PascalCase**（`.Coupons.CouponList[]`） |
 
 ## 手順1 — 売上トレンド（まず全体像）
@@ -56,7 +57,7 @@ for range in "2026-07-07 2026-08-06" "2026-06-07 2026-07-06" "2026-05-08 2026-06
     --end-datetime "${2}T23:59:59+0900" \
     --date-type 1 \
     --data '{"paginationRequestModel":{"requestRecordsAmount":1000,"requestPage":1}}' \
-    --jq '{orders: .PaginationResponseModel.totalRecordsAmount}'
+    --jq '{orders: (.PaginationResponseModel.totalRecordsAmount // 0)}'
 done
 ```
 
@@ -73,7 +74,7 @@ rms-cli order search-order \
   --end-datetime "2026-08-06T23:59:59+0900" \
   --date-type 1 \
   --data '{"paginationRequestModel":{"requestRecordsAmount":1000,"requestPage":1}}' \
-  --jq '.orderNumberList' > "$WORK/ord.json"
+  --jq '(.orderNumberList // [])' > "$WORK/ord.json"
 
 # 100件ずつのリクエストボディを作る
 TOTAL=$(jq 'length' "$WORK/ord.json")
