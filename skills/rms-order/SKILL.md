@@ -18,6 +18,8 @@ metadata:
 - **日時フォーマット** — `2024-01-15T00:00:00+0900` の形式（コロンなし `+0900`）。`+09:00` は 400 エラーになるので注意。
 - **検索可能期間** — 過去730日以内の注文のみ。730日より古い日付を指定すると 400 エラーになる。EndDatetime は StartDatetime から 63 日以内。
 - **出力フィールドは camelCase** — order は JSON API（json タグあり）のため、`--jq` で使うフィールド名は camelCase（例: `.orderNumberList[]`）。coupon の PascalCase とは異なる。
+- **`--date-type` は必ず明示する** — 省略すると `dateType: 0` が送られ、**エラーにならず常に0件が返る**。特に `orderProgressList` でステータス絞り込みをする際、実際には該当注文があるのに「滞留なし」と誤読する事故になる。通常は `--date-type 1`（注文日）を付ける。`--dry-run` で `"dateType":0` になっていないか確認できる。
+- **0件時のレスポンス** — 検索結果0件のとき `PaginationResponseModel` は `{}` になり `orderNumberList` は存在しない。`--jq` は `// 0` / `// []` で null 安全に書く。
 
 ## 注文検索
 
@@ -34,13 +36,15 @@ rms-cli order search-order \
 rms-cli order search-order \
   --start-datetime "2024-01-01T00:00:00+0900" \
   --end-datetime "2024-01-31T23:59:59+0900" \
+  --date-type 1 \
   --data '{"orderProgressList":[300]}'
 
 # 注文番号のリストだけ取り出す
 rms-cli order search-order \
   --start-datetime "2024-01-01T00:00:00+0900" \
   --end-datetime "2024-01-31T23:59:59+0900" \
-  --jq '.orderNumberList[]'
+  --date-type 1 \
+  --jq '(.orderNumberList // [])[]'
 
 # ページネーション
 rms-cli order search-order \
@@ -57,7 +61,7 @@ rms-cli order search-order \
 |---|---|---|
 | `--start-datetime` | string | 検索開始日時（必須） |
 | `--end-datetime` | string | 検索終了日時（必須） |
-| `--date-type` | int | 日付種別（デフォルト:1=注文日） |
+| `--date-type` | int | 日付種別。**実質必須**（未指定だと `dateType: 0` が送られ常に0件になる。「1がデフォルト」ではない） |
 | `--search-keyword` | string | フリーワード |
 | `--orderer-mail-address` | string | 注文者メールアドレス |
 | `--settlement-method` | int | 決済方法 |
@@ -193,8 +197,9 @@ TODAY=$(date +%Y-%m-%d)
 rms-cli order search-order \
   --start-datetime "${TODAY}T00:00:00+0900" \
   --end-datetime "${TODAY}T23:59:59+0900" \
+  --date-type 1 \
   --data '{"orderProgressList":[100]}' \
-  --jq '.orderNumberList'
+  --jq '(.orderNumberList // [])'
 ```
 
 ### 発送待ち注文を取得して配送情報を更新する
@@ -206,8 +211,9 @@ TODAY=$(date +%Y-%m-%dT%H:%M:%S+0900)
 rms-cli order search-order \
   --start-datetime "$SINCE" \
   --end-datetime "$TODAY" \
+  --date-type 1 \
   --data '{"orderProgressList":[300]}' \
-  --jq '.orderNumberList'
+  --jq '(.orderNumberList // [])'
 
 # 配送情報を更新（ドライランで確認してから）
 rms-cli order update-order-shipping --dry-run --data '{...}'
