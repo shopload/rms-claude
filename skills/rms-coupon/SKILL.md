@@ -15,7 +15,7 @@ metadata:
 
 - **出力フィールドは PascalCase** — coupon は XML API（json タグなし）。`--jq` フィールドは PascalCase（例: `.Coupons.CouponList[].CouponCode`）。
 - **`--data` のフィールド名も PascalCase** — 書き込み系（issue/update/patch/delete）の `--data` に渡す JSON キーも Go の構造体フィールド名（PascalCase）を使う。
-- **CouponStatus**: 1=有効, 2=未開始（開始日前）, 3=終了
+- **CouponStatus**: 1=有効, 2=未開始（開始日前）, 3=終了。**ただし信頼できない** — 実店舗（shopload）で検証したところ、開始日が未来のクーポンも含め**全件が `3` を返す**。有効/未開始の判定に使ってはいけない。**現在有効なクーポンは `CouponStartDate` / `CouponEndDate` を現在時刻と比較して判定すること。**
 
 ## API仕様・挙動上の注意点（`coupon issue` / `coupon update` の前に確認）
 
@@ -92,9 +92,19 @@ rms-cli coupon search --data '{"couponName":"OFF","hits":20}'
 rms-cli coupon search --data '{}' \
   --jq '(.Coupons.CouponList // []) | .[] | {code: .CouponCode, name: .CouponName, discount: .DiscountFactor, end: .CouponEndDate}'
 
-# ステータスで絞り込み（1=有効, 2=未開始, 3=終了）
+# 現在有効なクーポンを抽出（CouponStatus は使わない。上記のとおり全件 3 が返る）
+# 注意: --jq は jq の --arg を受け付けない（"accepts 0 arg(s)" エラーになる）。
+# 現在時刻はシェル展開で jq 式そのものに埋め込む。
+NOW=$(date +%Y-%m-%dT%H:%M:%S%z | sed 's/\(..\)$/:\1/')
 rms-cli coupon search --data '{}' \
-  --jq '(.Coupons.CouponList // []) | .[] | select(.CouponStatus == 1) | {code: .CouponCode, name: .CouponName}'
+  --jq "(.Coupons.CouponList // []) | map(select(.CouponStartDate <= \"$NOW\" and .CouponEndDate >= \"$NOW\")) | map({code: .CouponCode, name: .CouponName, end: .CouponEndDate})"
+
+# 指定期間と重なる既存クーポンを探す（新規発行前の重複チェックはこれを使う）
+rms-cli coupon search --data '{}' \
+  --jq '(.Coupons.CouponList // []) | .[]
+        | select(.CouponStartDate <= "2026-09-30T23:59:59+09:00"
+             and .CouponEndDate   >= "2026-09-14T00:00:00+09:00")
+        | {name: .CouponName, start: .CouponStartDate, end: .CouponEndDate}'
 ```
 
 主な検索パラメータ（`--data` で渡す）: `couponName`, `couponCode`, `couponStartDate`, `couponEndDate`, `hits`（件数）, `page`
