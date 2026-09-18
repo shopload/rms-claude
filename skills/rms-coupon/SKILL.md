@@ -196,6 +196,10 @@ rms-cli coupon issue --data '{
 | `MultiPrefectureCond` | object | 都道府県条件（`{"PrefectureCond":["NONE"]}` で条件なし） |
 | `OtherConditions` | object | その他条件。`RS004` の `StartValue` でN点以上購入条件を設定 |
 
+- `GenderCond` / `MultiRankCond` / `MultiPrefectureCond` を省略すると、`issue` / `update` は上記の「条件なし」値を自動で補う（`--dry-run` の内容にも反映される）。空のまま送ると API が `Request data is wrong format` を返すため。
+- `CouponImage` は省略する（ショップ既定の画像が使われる）。`coupon get` / `coupon search` が返す画像URLをそのまま渡すと `couponImage.not_available_url` で拒否される。
+- クーポンAPIは入力エラーを HTTP 200 の `<errors>` で返す。`issue` / `update` / `patch` / `delete` はこれを検知して exit 非ゼロ・stderr エンベロープ（`subtype` にエラーコード）で失敗する。この場合クーポンは発行・変更されていない。
+
 ## クーポン全項目更新
 
 既存クーポンの全フィールドを更新。事前に `coupon get` で現在値を取得してから変更すること。
