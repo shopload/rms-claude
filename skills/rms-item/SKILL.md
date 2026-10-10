@@ -178,6 +178,17 @@ rms-cli item-bundle --help
 rms-cli purchase-item --help
 ```
 
+## 商品 CSV 一括登録のエラーログ（sftp）
+
+`item.csv` / `item-cat.csv` を SFTP で上げると、楽天から「エラー N件」のメールが届き、詳細は SFTP の `ritem/logs/` に置かれる。
+メールに書かれたファイル名をそのまま読む（Shift_JIS なので `--utf8`）。読むだけのコマンドで、資格情報は API とは別の
+`RMS_FTP_USER` / `RMS_FTP_PASSWORD`（RMS の FTP/SFTP アカウント）。
+
+```bash
+rms-cli sftp ls ritem/logs --limit 10
+rms-cli sftp get ritem/logs/item-cat.20261010192011935.csv --utf8 -o - | head -20
+```
+
 ## よくある操作パターン
 
 ### 商品の在庫を確認して更新する
